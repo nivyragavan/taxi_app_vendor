@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         SystemUiOverlayStyle(statusBarColor: blueGreen));
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'vendor',
+      title: ' Taxi Vendor App',
       theme: ThemeData(primarySwatch: Colors.blueGrey),
       home: const SplashScreen(),
     );
