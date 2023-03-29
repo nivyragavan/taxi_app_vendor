@@ -15,22 +15,19 @@ class CustomTextField extends StatelessWidget {
   final keyboardtype;
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        controller: controller,
-        cursorColor: blueGreen,
-        decoration: InputDecoration(
-          hintText: hinttext,
-          contentPadding: const EdgeInsets.all(10),
-          border: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black)),
-          focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: blueGreen, width: 2)),
-        ),
-        validator: validator,
-        keyboardType: keyboardtype,
+    return TextFormField(
+      controller: controller,
+      cursorColor: blueGreen,
+      decoration: InputDecoration(
+        hintText: hinttext,
+        contentPadding: const EdgeInsets.all(10),
+        border: const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.black)),
+        focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: blueGreen, width: 2)),
       ),
+      validator: validator,
+      keyboardType: keyboardtype,
     );
   }
 }

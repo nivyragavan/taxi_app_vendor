@@ -1,25 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:viswa_cab_vendor_app/view/assign_driver.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:viswa_cab_vendor_app/widgets/appbar.dart';
 import 'package:viswa_cab_vendor_app/widgets/custom_elevatedbtn.dart';
 import 'package:viswa_cab_vendor_app/widgets/custom_textfield.dart';
 import 'package:viswa_cab_vendor_app/widgets/drawer_widget.dart';
+import '../constants/colors.dart';
+import '../models/car_number_list_model.dart';
+import '../service/api_service.dart';
 
-class WalletScreen extends StatelessWidget {
+class WalletScreen extends StatefulWidget {
   WalletScreen({Key? key}) : super(key: key);
+
+  @override
+  State<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends State<WalletScreen> {
   final formKey = GlobalKey<FormState>();
+
   final amount = TextEditingController();
+
   final vehicleNumber = TextEditingController();
-  var regNumber = [
-    "TN56A6513",
-    "TN12A3453",
-    "TN56A6343",
-    "TN16A2333",
-    "TN26A6563",
-    "TN54A9893",
-    "TN32Z6803",
-    "TN89A6513",
-  ];
+
+  CarNumberListModel? carNumberListModel;
+
+  bool isCarLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getCarData();
+  }
+
+  void getCarData() async {
+    carNumberListModel = await ApiService().carNumberList();
+    if(carNumberListModel != null){
+      setState(() {
+        isCarLoading = true;
+      });
+      setState(() {
+        carNumberListModel = carNumberListModel;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +56,40 @@ class WalletScreen extends StatelessWidget {
           key: formKey,
           child: Column(
             children: [
-              VehicleDropdown(
-                  vehicleNumber: vehicleNumber, regNumber: regNumber),
+              TypeAheadFormField(
+                  textFieldConfiguration: TextFieldConfiguration(
+                      controller: vehicleNumber,
+                      decoration: InputDecoration(
+                        hintText: 'Select Car Register Number',
+                        contentPadding: const EdgeInsets.all(10),
+                        border: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black)),
+                        focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: blueGreen, width: 2)),
+                      )),
+                  suggestionsCallback: (pattern) {
+                    return carNumberListModel!.body!.carList!.where(
+                            (item) => item.toString().toLowerCase().contains(pattern.toLowerCase()));
+                  },
+                  onSuggestionSelected: (CarList val) {
+                    this.vehicleNumber.text = val.carNumber!;
+                    print(val);
+                  },
+                  itemBuilder: (_, CarList item) {
+                    return ListTile(
+                      title: Text(item.carNumber!),
+                    );
+                  },
+                  getImmediateSuggestions: true,
+                  hideSuggestionsOnKeyboardHide: true,
+                  hideOnEmpty: false,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Select Vehicle Number';
+                    }
+                    return null;
+                  }),
+              const SizedBox(height: 20,),
               CustomTextField(
                 hinttext: 'Enter Amount',
                 keyboardtype: TextInputType.number,
@@ -45,6 +100,7 @@ class WalletScreen extends StatelessWidget {
                 },
                 controller: amount,
               ),
+              SizedBox(height: 20,),
               CustomElevatedbutton(
                 text: "Recharge",
                 fontsize: 18,

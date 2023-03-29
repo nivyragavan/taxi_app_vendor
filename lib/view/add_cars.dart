@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:viswa_cab_vendor_app/constants/colors.dart';
+import 'package:viswa_cab_vendor_app/service/api_service.dart';
 import 'package:viswa_cab_vendor_app/view/mycars.dart';
 import 'package:viswa_cab_vendor_app/widgets/appbar.dart';
 
@@ -21,22 +23,9 @@ class AddCars extends StatefulWidget {
 class _AddCarsState extends State<AddCars> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  late String carmodel;
-
-  late String regno;
-
   final regNo = TextEditingController();
 
   final model = TextEditingController();
-
-  void validateAndSave() {
-    final FormState? form = _formKey.currentState;
-    if (form!.validate()) {
-      print('Form is valid');
-    } else {
-      print('Form is invalid');
-    }
-  }
 
   int clickedDocType = 0;
 
@@ -214,13 +203,20 @@ class _AddCarsState extends State<AddCars> {
                     const SizedBox(height: 10),
                     buildFileUploadButton('Insurance', 5),
                     const SizedBox(height: 10),
-                    buildFileUploadButton('FC Copy (optional)', 6),
+                    buildFileUploadButton('FC Copy', 6),
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {
-                        // Get.back();
-                        validateAndSave();
-                        Get.to(const MyCars());
+                      onPressed: () async{
+                       if(_formKey.currentState!.validate()){
+                         var data = await ApiService().carRegister(regNo.text, model.text, carFront, carChassis, rcFront, rcBack, insurance,fcCopy);
+                         if(data['statusCode'] == 1){
+                           Fluttertoast.showToast(msg: 'Car Added Successfully');
+                           Get.to(MyCars());
+                           print('====success====');
+                         }else{
+                           print('====failed====');
+                         }
+                       }
                       },
                       style: ElevatedButton.styleFrom(primary: black),
                       child: const Padding(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:viswa_cab_vendor_app/view/assign_driver.dart';
+import 'package:viswa_cab_vendor_app/view/assigned_drivers_screen.dart';
 import 'package:viswa_cab_vendor_app/view/authentication/login_screen.dart';
 import 'package:viswa_cab_vendor_app/view/home/home_view.dart';
 import 'package:viswa_cab_vendor_app/view/my_earings_screen.dart';
@@ -12,6 +13,7 @@ import 'package:viswa_cab_vendor_app/view/support_screen.dart';
 import 'package:viswa_cab_vendor_app/view/transaction_history.dart';
 import 'package:viswa_cab_vendor_app/view/wallet_history_screen.dart';
 import 'package:viswa_cab_vendor_app/view/wallet_screen.dart';
+import 'package:viswa_cab_vendor_app/widgets/customtext.dart';
 import 'package:viswa_cab_vendor_app/widgets/menu_item.dart';
 
 class DrawerWidget extends StatefulWidget {
@@ -36,37 +38,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   height: 20,
                 ),
                 const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    Get.to(const ProfileScreen());
-                  },
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        child: Image.asset(
-                          'assets/images/driver.png',
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            "Nivy",
-                            // "${getProfileModel?.body?.getprofiledetails?[0].name}",
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Text(
-                            "6382136965",
-                            // "${getProfileModel?.body?.getprofiledetails?[0].contact}",
-                            style: TextStyle(fontSize: 17),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                Align(alignment:Alignment.topLeft,child: Image.asset('assets/logo/logo.png',width: 150,)),
                 const SizedBox(height: 10),
                 const Divider(),
                 const SizedBox(height: 10),
@@ -99,6 +71,14 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     icon: Icons.person_add_alt_1_outlined,
                     onTap: () {
                       Get.to(AssignDriver());
+                    },
+                    color: Colors.black,
+                    size: 18),
+                MenuItems(
+                    title: 'Assigned Drivers',
+                    icon: Icons.people,
+                    onTap: () {
+                      Get.to(AssignedDriversScreen());
                     },
                     color: Colors.black,
                     size: 18),

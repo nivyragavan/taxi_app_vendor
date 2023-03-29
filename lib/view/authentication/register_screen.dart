@@ -2,11 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:viswa_cab_vendor_app/constants/colors.dart';
 import 'package:viswa_cab_vendor_app/view/authentication/login_screen.dart';
 import 'package:viswa_cab_vendor_app/view/camera.dart';
+import 'package:viswa_cab_vendor_app/view/home/home_view.dart';
+
+import '../../service/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -17,6 +23,11 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final formKey = GlobalKey<FormState>();
+  final box = GetStorage();
+  final nameController = TextEditingController();
+  final contactController = TextEditingController();
+  final passwordController = TextEditingController();
+
   int clickedDocType = 0;
 
   File? aadhaarFront;
@@ -91,8 +102,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final image = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image == null) return null;
       final imageTemp = File(image.path);
+      print('===========image path===========');
+      print(imageTemp);
       return imageTemp;
     } on PlatformException catch (e) {
+      print('==========image failed===========');
       print('failed to pick image: $e');
       return null;
     }
@@ -130,6 +144,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
+                  controller: nameController,
                   cursorColor: blueGreen,
                   decoration: InputDecoration(
                       contentPadding: const EdgeInsets.all(10),
@@ -146,6 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
+                  controller: contactController,
                   cursorColor: blueGreen,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
@@ -164,6 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
+                  controller: passwordController,
                   cursorColor: blueGreen,
                   decoration: InputDecoration(
                       contentPadding: const EdgeInsets.all(10),
@@ -179,22 +196,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  cursorColor: blueGreen,
-                  decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(10),
-                      hintText: 'Confirm your password',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5)),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: blueGreen, width: 2))),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "Enter password again";
-                    }
-                  },
-                ),
                 const SizedBox(height: 10),
                 buildFileUploadButton('Aadhaar Front', 1),
                 const SizedBox(height: 10),
@@ -202,22 +203,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 10),
                 buildFileUploadButton('Pan Card', 3),
                 const SizedBox(height: 10),
-                buildFileUploadButton('Passbook (optional)', 4),
+                buildFileUploadButton('Passbook', 4),
                 const SizedBox(height: 10),
                 buildFileUploadButton(
-                    'Rental Agreement 1st page (optional)', 5),
+                    'Rental Agreement 1st page', 5),
                 const SizedBox(height: 10),
                 buildFileUploadButton(
-                    'Rental Agreement 2st page (optional)', 6),
+                    'Rental Agreement 2st page', 6),
                 const SizedBox(height: 10),
                 ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         primary: blueGreen, minimumSize: const Size(120, 45)),
-                    onPressed: () {
-                      if (formKey.currentState!.validate()) {
-                        Get.to(LoginScreen());
-                      }
-                    },
+                    onPressed: (aadhaarFront != null &&
+                            aadhaarBack != null &&
+                            pan != null)
+                        ? () async {
+                            if (formKey.currentState!.validate()) {
+                              Get.dialog(
+                                  Dialog(
+                                    backgroundColor: blueGreen,
+                                    child: Container(
+                                      height: 100,
+                                      child: SpinKitSpinningLines(
+                                        color: Colors.white,
+                                        lineWidth: 3,
+                                      ),
+                                    ),
+                                  ),
+                                  barrierDismissible: false);
+                              var data = await ApiService().vendorRegister(
+                                  nameController.text,
+                                  contactController.text,
+                                  passwordController.text,
+                                  aadhaarFront,
+                                  aadhaarBack,
+                                  pan,
+                                  passbook,
+                                  rental1,
+                                  rental2);
+                              print(data);
+                              print(data["statusCode"]);
+                              if(data["statusCode"] == 1) {
+                                Fluttertoast.showToast(
+                                    msg: 'Registered Successfully',
+                                    fontSize: 18);
+                                Get.offAll(LoginScreen());
+                                print('===success===');
+                              } else {
+                                print('===failed===');
+                              }
+                            }
+                          }
+                        : null,
                     child: const Text('REGISTER',
                         style: TextStyle(fontSize: 20, letterSpacing: 2))),
                 Row(
@@ -231,9 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             letterSpacing: 2)),
                     TextButton(
                       style: TextButton.styleFrom(primary: blueGreen),
-                      onPressed: () {
-                        Get.to(LoginScreen());
-                      },
+                      onPressed: () {},
                       child: const Text('Login',
                           style: TextStyle(
                               fontSize: 18,

@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:viswa_cab_vendor_app/constants/colors.dart';
+import 'package:viswa_cab_vendor_app/service/api_service.dart';
 import 'package:viswa_cab_vendor_app/view/camera.dart';
 import 'package:viswa_cab_vendor_app/view/mydriver.dart';
 import 'package:viswa_cab_vendor_app/widgets/appbar.dart';
@@ -21,23 +23,11 @@ class AddDrivers extends StatefulWidget {
 class _AddDriversState extends State<AddDrivers> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  late String carmodel;
-  late String regno;
-
   final name = TextEditingController();
   final contact = TextEditingController();
   final location = TextEditingController();
   final license = TextEditingController();
   final expiry = TextEditingController();
-
-  void validateAndSave() {
-    final FormState? form = _formKey.currentState;
-    if (form!.validate()) {
-      print('Form is valid');
-    } else {
-      print('Form is invalid');
-    }
-  }
 
   int clickedDocType = 0;
 
@@ -114,7 +104,7 @@ class _AddDriversState extends State<AddDrivers> {
 
   Future<File?> cameraImage() async {
     try {
-      final image = await Get.to(const TakePhoto());
+      final image = await ImagePicker().pickImage(source: ImageSource.camera,imageQuality: 10);
       if (image == null) return null;
       final imageTemp = File(image.path);
       return imageTemp;
@@ -123,8 +113,6 @@ class _AddDriversState extends State<AddDrivers> {
       return null;
     }
   }
-
-  var carModel = ["Mini", "Sedan", "SUV"];
 
   static const districtList = [
     "Ariyalur",
@@ -242,7 +230,7 @@ class _AddDriversState extends State<AddDrivers> {
                               .contains(pattern.toLowerCase()));
                         },
                         onSuggestionSelected: (String val) {
-                          this.location.text = val;
+                          location.text = val;
                           print(val);
                         },
                         itemBuilder: (_, String item) {
@@ -306,7 +294,7 @@ class _AddDriversState extends State<AddDrivers> {
                             print(
                                 pickedDate); //pickedDate output format => 2021-03-10 00:00:00.000
                             String formattedDate =
-                                DateFormat('dd-MM-yyyy').format(pickedDate);
+                                DateFormat('yyyy-MM-dd').format(pickedDate);
                             print(
                                 formattedDate); //formatted date output using intl package =>  2021-03-16
                             //you can implement different kind of Date Format here according to your requirement
@@ -337,12 +325,21 @@ class _AddDriversState extends State<AddDrivers> {
                     buildFileUploadButton('License Back', 5),
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {
-                        // Get.back();
-                        validateAndSave();
-                        Get.to(const MyDriver());
+                      onPressed: () async{
+                        if(_formKey.currentState!.validate()){
+                          var data = await ApiService().driverRegister(name.text, contact.text, location.text, license.text, expiry.text, profileImage, aadhaarFront, aadhaarBack, licenseFront, licenseBack);
+                          if(data['statusCode'] == 1){
+                            Fluttertoast.showToast(
+                              msg: 'Driver Added Successfully',
+                              fontSize: 18);
+                            Get.to(MyDriver());
+                          print('===success===');
+                          } else {
+                            print('===failed===');
+                          }
+                        }
                       },
-                      style: ElevatedButton.styleFrom(primary: black),
+                      style: ElevatedButton.styleFrom(backgroundColor: black),
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 10),
                         child: Text(

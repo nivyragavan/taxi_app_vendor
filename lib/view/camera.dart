@@ -1,5 +1,3 @@
-
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
@@ -7,122 +5,120 @@ class TakePhoto extends StatefulWidget {
   const TakePhoto({Key? key}) : super(key: key);
 
   @override
-  _TakePhotoState createState() => _TakePhotoState();
+  State<TakePhoto> createState() => _TakePhotoState();
 }
 
 class _TakePhotoState extends State<TakePhoto> {
-  late CameraController _controller;
-  Future<void>? _initializeControllerFuture;
-  List<CameraDescription>? _availableCameras;
+   List<CameraDescription>? cameras;
+   CameraController? cameraController;
+
+  int direction = 0;
 
   @override
   void initState() {
+    startCamera(direction);
     super.initState();
-
-    _getAvailableCameras();
   }
 
-  Future<void> _getAvailableCameras() async {
-    _availableCameras = await availableCameras();
-    await _initCamera(_availableCameras!.firstWhere((description) =>
-        description.lensDirection == CameraLensDirection.back));
-  }
+  void startCamera(int direction) async {
+    cameras = await availableCameras();
 
-  void _toggleCameraLens() {
-    // get current lens direction (front / rear)
-    final lensDirection = _controller.description.lensDirection;
-    CameraDescription newDescription;
-    if (lensDirection == CameraLensDirection.back) {
-      newDescription = _availableCameras!.firstWhere((description) =>
-          description.lensDirection == CameraLensDirection.front);
-    } else {
-      newDescription = _availableCameras!.firstWhere((description) =>
-          description.lensDirection == CameraLensDirection.back);
-    }
-    _initCamera(newDescription);
-  }
+    cameraController = CameraController(
+      cameras![direction],
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
 
-  Future<void> _initCamera(CameraDescription description) async {
-    _controller = CameraController(description, ResolutionPreset.ultraHigh);
-
-    try {
-      _initializeControllerFuture = _controller.initialize();
-      // to notify the widgets that camera has been initialized and now camera preview can be done
-      setState(() {});
-    } catch (e) {
-      // await Sentry.captureException(e, stackTrace: stackTrace);}
-    }
+    await cameraController!.initialize().then((value) {
+      if(!mounted) {
+        return;
+      }
+      setState(() {}); //To refresh widget
+    }).catchError((e) {
+      print(e);
+    });
   }
 
   @override
   void dispose() {
+    cameraController!.dispose();
     super.dispose();
-    _controller.dispose();
-  }
-
-  Future<XFile?> takePicture() async {
-    if (_controller.value.isTakingPicture) {
-      return null;
-    }
-
-    try {
-      var file = await _controller.takePicture();
-      return file;
-    } on CameraException catch (_) {
-      // await Sentry.captureException(e, stackTrace: stackTrace);
-      return null;
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
+    if(cameraController!.value.isInitialized) {
+      return Scaffold(
+        body: Stack(
           children: [
-            IconButton(
-                onPressed: () {
-                  _toggleCameraLens();
-                },
-                icon: const Icon(Icons.switch_camera_outlined)),
-            Expanded(
-              child: Stack(
-                children: [
-                  FutureBuilder<void>(
-                    future: _initializeControllerFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        // If the Future is complete, display the preview.
-                        return Container(
-                          alignment: Alignment.center,
-                          child: CameraPreview(_controller),
-                        );
-                      } else {
-                        // Otherwise, display a loading indicator.
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  ),
-                  Positioned(
-                      bottom: 50,
-                      left: 0,
-                      right: 0,
-                      child: IconButton(
-                          color: Colors.white,
-                          onPressed: () async {
-                            var file = await takePicture();
-                            Navigator.of(context).pop(file);
-                          },
-                          icon: const Icon(
-                            Icons.camera_alt_outlined,
-                            size: 40,
-                          )))
-                ],
+            CameraPreview(cameraController!),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  direction = direction == 0 ? 1 : 0;
+                  startCamera(direction);
+                });
+              },
+              child: button(Icons.flip_camera_ios_outlined, Alignment.bottomLeft),
+            ),
+            GestureDetector(
+              onTap: () {
+                cameraController!.takePicture().then((XFile? file) {
+                  if(mounted) {
+                    if(file != null) {
+                      print("Picture saved to ${file.path}");
+                    }
+                  }
+                });
+              },
+              child: button(Icons.camera_alt_outlined, Alignment.bottomCenter),
+            ),
+            Align(
+              alignment: AlignmentDirectional.topCenter,
+              child: Text(
+                "My Camera",
+                style: TextStyle(
+                  fontSize: 30,
+                ),
               ),
             ),
           ],
         ),
+      );
+    } else {
+      return const SizedBox();
+    }
+  }
+
+  Widget button(IconData icon, Alignment alignment) {
+    return Align(
+      alignment: alignment,
+      child: Container(
+        margin: const EdgeInsets.only(
+          left: 20,
+          bottom: 20,
+        ),
+        height: 50,
+        width: 50,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              offset: Offset(2, 2),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: Colors.black54,
+          ),
+        ),
       ),
     );
   }
+
 }

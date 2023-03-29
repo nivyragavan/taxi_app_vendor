@@ -1,71 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:viswa_cab_vendor_app/models/profile_view_model.dart';
-import 'package:viswa_cab_vendor_app/service/api_service.dart';
-import 'package:viswa_cab_vendor_app/widgets/appbar.dart';
-import 'package:viswa_cab_vendor_app/widgets/drawer_widget.dart';
+import 'package:viswa_cab_vendor_app/constants/colors.dart';
+import 'package:viswa_cab_vendor_app/models/approved_car_list_model.dart';
 
-import '../constants/colors.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+class CarDetailedScreen extends StatelessWidget {
 
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
+  final CarapprovedvendorList carDetails;
 
-class _ProfileScreenState extends State<ProfileScreen> {
-
-  ProfileViewModel? profileViewModel;
-
-  bool isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    getData();
-  }
-
-  void getData() async {
-    profileViewModel = await ApiService().profileView();
-    if(profileViewModel != null){
-      setState(() {
-        isLoading = true;
-      });
-      setState(() {
-        profileViewModel = profileViewModel;
-      });
-    }
-  }
+  const CarDetailedScreen({Key? key, required this.carDetails}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppbar(title: 'Profile'),
-      drawer: const DrawerWidget(),
-      body: SingleChildScrollView(child: buildProfile()),
-    );
-  }
-
-  buildProfile() {
-    var e = profileViewModel!.body![0];
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child:isLoading == false ? Center(child: CircularProgressIndicator(color: blueGreen,),) : Column(
+      appBar: AppBar(
+        title: Text(
+          '${carDetails.carNumber}',
+          style: TextStyle(fontSize: 20, letterSpacing: 2),
+        ),
+        centerTitle: true,
+        backgroundColor: blueGreen,
+      ),
+      body: Column(
         children: [
           ListTile(
             title:
-            Text('Name', style: TextStyle(fontSize: 18, letterSpacing: 2)),
-            trailing: Text('${e.name}',
+            Text('Register Number', style: TextStyle(fontSize: 18, letterSpacing: 2)),
+            trailing: Text('${carDetails.carNumber}',
                 style: TextStyle(fontSize: 18, letterSpacing: 2)),
           ),
           ListTile(
-            title: Text('Phone Number',
+            title: Text('Model',
                 style: TextStyle(fontSize: 18, letterSpacing: 2)),
-            trailing: Text('${e.contact}',
+            trailing: Text('${carDetails.model}',
                 style: TextStyle(fontSize: 18, letterSpacing: 2)),
           ),
           ListTile(
-              title: Text('Aadhaar Front',
+              title: Text('Front Image',
                   style: TextStyle(fontSize: 18, letterSpacing: 2)),
               trailing: GestureDetector(
                 onTap: () {
@@ -87,7 +57,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               )),
           ListTile(
-            title: Text('Aadhaar Back',
+              title: Text('Chassis Image',
+                  style: TextStyle(fontSize: 18, letterSpacing: 2)),
+              trailing: GestureDetector(
+                onTap: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) => SimpleDialog(
+                        contentPadding: EdgeInsets.all(0),
+                        children: [
+                          Image.network(
+                              'https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg?cs=srgb&dl=pexels-anjana-c-674010.jpg&fm=jpg'),
+                        ],
+                      ));
+                },
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  child: Image.network(
+                      'https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg?cs=srgb&dl=pexels-anjana-c-674010.jpg&fm=jpg'),
+                ),
+              )),
+          ListTile(
+            title: Text('RC Front',
                 style: TextStyle(fontSize: 18, letterSpacing: 2)),
             trailing: GestureDetector(
               onTap: () {
@@ -110,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           ListTile(
-            title: Text('Pan Card',
+            title: Text('RC Back',
                 style: TextStyle(fontSize: 18, letterSpacing: 2)),
             trailing: GestureDetector(
               onTap: () {
@@ -133,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           ListTile(
-            title: Text('Passbook',
+            title: Text('Insurance',
                 style: TextStyle(fontSize: 18, letterSpacing: 2)),
             trailing: GestureDetector(
               onTap: () {
@@ -156,30 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           ListTile(
-            title: Text('Rental Agreement 1',
-                style: TextStyle(fontSize: 18, letterSpacing: 2)),
-            trailing: GestureDetector(
-              onTap: () {
-                showDialog(
-                    context: context,
-                    builder: (context) => SimpleDialog(
-                      contentPadding: EdgeInsets.all(0),
-                      children: [
-                        Image.network(
-                            'https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg?cs=srgb&dl=pexels-anjana-c-674010.jpg&fm=jpg'),
-                      ],
-                    ));
-              },
-              child: Container(
-                width: 50,
-                height: 50,
-                child: Image.network(
-                    'https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg?cs=srgb&dl=pexels-anjana-c-674010.jpg&fm=jpg'),
-              ),
-            ),
-          ),
-          ListTile(
-            title: Text('Rental Agreement 2',
+            title: Text('FC Copy',
                 style: TextStyle(fontSize: 18, letterSpacing: 2)),
             trailing: GestureDetector(
               onTap: () {

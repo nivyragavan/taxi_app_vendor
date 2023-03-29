@@ -4,6 +4,8 @@ import 'package:viswa_cab_vendor_app/view/active_cabs.dart';
 import 'package:viswa_cab_vendor_app/view/blocked%20cabs.dart';
 import 'package:viswa_cab_vendor_app/view/home/cab_performance_screen.dart';
 import 'package:viswa_cab_vendor_app/view/home/driver_performance_screen.dart';
+import 'package:viswa_cab_vendor_app/view/home/individual_cab_performance_screen.dart';
+import 'package:viswa_cab_vendor_app/view/home/individual_driver_performance_screen.dart';
 import 'package:viswa_cab_vendor_app/view/inactive_cabs.dart';
 import 'package:viswa_cab_vendor_app/view/my_earings_screen.dart';
 import 'package:viswa_cab_vendor_app/widgets/appbar.dart';
@@ -239,20 +241,25 @@ class HomeView extends StatelessWidget {
               ),
               SizedBox(
                 height: 150,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 4,
-                  itemBuilder: (
-                    BuildContext context,
-                    int index,
-                  ) =>
-                      _cabcard(
-                    cabno: "TN38AS1111",
-                    amount: "11806.83 ",
-                    rating: "4.5",
-                    rides: 8,
-                    photo: 'car2.png',
+                child: GestureDetector(
+                  onTap: (){
+                    Get.to(IndividualCabPerformanceScreen());
+                  },
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 4,
+                    itemBuilder: (
+                      BuildContext context,
+                      int index,
+                    ) =>
+                        _cabcard(
+                      cabno: "TN38AS1111",
+                      amount: "11806.83 ",
+                      rating: "4.5",
+                      rides: 8,
+                      photo: 'car2.png',
+                    ),
                   ),
                 ),
               ),
@@ -280,20 +287,25 @@ class HomeView extends StatelessWidget {
               ),
               SizedBox(
                 height: 140,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 4,
-                  itemBuilder: (
-                    BuildContext context,
-                    int index,
-                  ) =>
-                      _drivercard(
-                    drivername: 'Raja',
-                    earning: '11806',
-                    photo: 'driver.png',
-                    rating: '4.5',
-                    rides: 18,
+                child: GestureDetector(
+                  onTap: (){
+                    Get.to(IndividualDriverPerformanceScreen());
+                  },
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 4,
+                    itemBuilder: (
+                      BuildContext context,
+                      int index,
+                    ) =>
+                        _drivercard(
+                      drivername: 'Raja',
+                      earning: '11806',
+                      photo: 'driver.png',
+                      rating: '4.5',
+                      rides: 18,
+                    ),
                   ),
                 ),
               ),

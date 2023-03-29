@@ -3,46 +3,90 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:viswa_cab_vendor_app/constants/colors.dart';
+import 'package:viswa_cab_vendor_app/models/car_number_list_model.dart';
+import 'package:viswa_cab_vendor_app/models/driver_details_list_model.dart';
+import 'package:viswa_cab_vendor_app/service/api_service.dart';
+import 'package:viswa_cab_vendor_app/view/assigned_drivers_screen.dart';
 import 'package:viswa_cab_vendor_app/widgets/appbar.dart';
 import 'package:viswa_cab_vendor_app/widgets/custom_elevatedbtn.dart';
-import 'package:viswa_cab_vendor_app/widgets/custom_textfield.dart';
+import 'package:viswa_cab_vendor_app/widgets/customtext.dart';
 import 'package:viswa_cab_vendor_app/widgets/drawer_widget.dart';
 
-class AssignDriver extends StatelessWidget {
+class AssignDriver extends StatefulWidget {
   AssignDriver({Key? key}) : super(key: key);
+
+  @override
+  State<AssignDriver> createState() => _AssignDriverState();
+}
+
+class _AssignDriverState extends State<AssignDriver> {
   final formKey = GlobalKey<FormState>();
+
   final vehicleNumber = TextEditingController();
+
   final driverName = TextEditingController();
-  final driverPhonenumber = TextEditingController();
-  final licenseNumber = TextEditingController();
-  var regNumber = [
-    "TN56A6513",
-    "TN12A3453",
-    "TN56A6343",
-    "TN16A2333",
-    "TN26A6563",
-    "TN54A9893",
-    "TN32Z6803",
-    "TN89A6513",
-  ];
-  var drivers = ["arjun", "ragu", "raj"];
+
+  final driverContact = TextEditingController();
+
+  CarNumberListModel? carNumberListModel;
+  DriverDetailsListModel? driverDetailsListModel;
+
+  bool isCarLoading = false;
+  bool isDriverLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getCarData();
+    getDriverData();
+  }
+
+
+  void getCarData() async {
+    carNumberListModel = await ApiService().carNumberList();
+    if(carNumberListModel != null){
+      setState(() {
+        isCarLoading = true;
+      });
+      setState(() {
+        carNumberListModel = carNumberListModel;
+      });
+    }
+  }
+
+  void getDriverData() async {
+    driverDetailsListModel = await ApiService().driverDetailsList();
+    if(driverDetailsListModel != null){
+      setState(() {
+        isDriverLoading = true;
+      });
+      setState(() {
+        driverDetailsListModel = driverDetailsListModel;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppbar(title: 'Assign Drivers'),
       drawer: const DrawerWidget(),
-      body: SingleChildScrollView(
-        child: Form(
-          key: formKey,
-          child: Column(children: [
-            VehicleDropdown(vehicleNumber: vehicleNumber, regNumber: regNumber),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TypeAheadFormField(
+      body: Padding(
+        padding: const EdgeInsets.all(15),
+        child: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 50),
+              CustomText(text: 'Car Register Number',fontsize: 17),
+              SizedBox(height: 10),
+              TypeAheadFormField(
                   textFieldConfiguration: TextFieldConfiguration(
-                      controller: driverName,
+                      controller: vehicleNumber,
                       decoration: InputDecoration(
-                        hintText: 'Select Driver',
+                        hintText: 'Select Car Register Number',
                         contentPadding: const EdgeInsets.all(10),
                         border: const OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.black)),
@@ -50,16 +94,16 @@ class AssignDriver extends StatelessWidget {
                             borderSide: BorderSide(color: blueGreen, width: 2)),
                       )),
                   suggestionsCallback: (pattern) {
-                    return drivers.where((item) =>
-                        item.toLowerCase().contains(pattern.toLowerCase()));
+                    return carNumberListModel!.body!.carList!.where(
+                            (item) => item.toString().toLowerCase().contains(pattern.toLowerCase()));
                   },
-                  onSuggestionSelected: (String val) {
-                    driverName.text = val;
+                  onSuggestionSelected: (CarList val) {
+                    this.vehicleNumber.text = val.carNumber!;
                     print(val);
                   },
-                  itemBuilder: (_, String item) {
+                  itemBuilder: (_, CarList item) {
                     return ListTile(
-                      title: Text(item),
+                      title: Text(item.carNumber!),
                     );
                   },
                   getImmediateSuggestions: true,
@@ -67,98 +111,105 @@ class AssignDriver extends StatelessWidget {
                   hideOnEmpty: false,
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return 'Select Driver';
+                      return 'Select Vehicle Number';
                     }
                     return null;
                   }),
-            ),
-            CustomTextField(
-              hinttext: 'Driver Phone Number',
-              controller: driverPhonenumber,
-              validator: (value) {
-                if (value?.length != 10) {
-                  return 'Enter Correct Phonenumber';
-                }
-              },
-              keyboardtype: TextInputType.number,
-            ),
-            CustomTextField(
-              hinttext: 'License number',
-              controller: licenseNumber,
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Enter License Number';
-                }
-              },
-              keyboardtype: TextInputType.text,
-            ),
-            const SizedBox(height: 20),
-            CustomElevatedbutton(
-              text: "Assign",
-              fontsize: 18,
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Fluttertoast.showToast(msg: "Driver Assigned Successfully");
-                } else {
-                  Fluttertoast.showToast(
-                      msg: 'enter required fields', fontSize: 16);
-                }
-              },
-            )
-          ]),
+              SizedBox(height: 20),
+                  CustomText(text: 'Driver Name',fontsize: 17),
+                  SizedBox(height: 10),
+              TypeAheadFormField(
+                  textFieldConfiguration: TextFieldConfiguration(
+                      controller: driverName,
+                      decoration: InputDecoration(
+                        hintText: 'Select Driver Name',
+                        contentPadding: const EdgeInsets.all(10),
+                        border: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black)),
+                        focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: blueGreen, width: 2)),
+                      )),
+                  suggestionsCallback: (pattern) {
+                    return driverDetailsListModel!.body!.driverList!.where((item) =>
+                        item.toString().toLowerCase().contains(pattern.toLowerCase()));
+                  },
+                  onSuggestionSelected: (DriverList val) {
+                    driverName.text = val.name!;
+                    print(val);
+                  },
+                  itemBuilder: (_, DriverList item) {
+                    return ListTile(
+                      title: Text(item.name!),
+                    );
+                  },
+                  getImmediateSuggestions: true,
+                  hideSuggestionsOnKeyboardHide: true,
+                  hideOnEmpty: false,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Select Driver Name';
+                    }
+                    return null;
+                  }),
+              SizedBox(height: 20),
+                  CustomText(text: 'Driver Phone Number',fontsize: 17),
+                  SizedBox(height: 10),
+                  TypeAheadFormField(
+                      textFieldConfiguration: TextFieldConfiguration(
+                          controller: driverContact,
+                          decoration: InputDecoration(
+                            hintText: 'Select Driver Phone Number',
+                            contentPadding: const EdgeInsets.all(10),
+                            border: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.black)),
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: blueGreen, width: 2)),
+                          )),
+                      suggestionsCallback: (pattern) {
+                        return driverDetailsListModel!.body!.driverList!.where((item) =>
+                            item.toString().toLowerCase().contains(pattern.toLowerCase()));
+                      },
+                      onSuggestionSelected: (DriverList val) {
+                        driverContact.text = val.contact!;
+                        print(val);
+                      },
+                      itemBuilder: (_, DriverList item) {
+                        return ListTile(
+                          title: Text(item.contact!),
+                        );
+                      },
+                      getImmediateSuggestions: true,
+                      hideSuggestionsOnKeyboardHide: true,
+                      hideOnEmpty: false,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Select Driver Phone Number';
+                        }
+                        return null;
+                      }),
+              const SizedBox(height: 30),
+              Center(
+                child: CustomElevatedbutton(
+                  text: "Assign",
+                  fontsize: 18,
+                  onPressed: () async{
+                    if (formKey.currentState!.validate()) {
+                      var data = await ApiService().assignDriver(vehicleNumber.text, driverName.text, driverContact.text);
+                      if(data['statusCode'] == 1){
+                        Fluttertoast.showToast(msg: "Driver Assigned Successfully");
+                        Get.to(AssignedDriversScreen());
+                      }
+                    } else {
+                      Fluttertoast.showToast(
+                          msg: 'enter required fields', fontSize: 16);
+                    }
+                  },
+                ),
+              )
+            ]),
+          ),
         ),
       ),
-    );
-  }
-}
-
-class VehicleDropdown extends StatelessWidget {
-  const VehicleDropdown({
-    Key? key,
-    required this.vehicleNumber,
-    required this.regNumber,
-  }) : super(key: key);
-
-  final TextEditingController vehicleNumber;
-  final List<String> regNumber;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TypeAheadFormField(
-          textFieldConfiguration: TextFieldConfiguration(
-              controller: vehicleNumber,
-              decoration: InputDecoration(
-                hintText: 'Select your Vehicle',
-                contentPadding: const EdgeInsets.all(10),
-                border: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black)),
-                focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: blueGreen, width: 2)),
-              )),
-          suggestionsCallback: (pattern) {
-            return regNumber.where(
-                (item) => item.toLowerCase().contains(pattern.toLowerCase()));
-          },
-          onSuggestionSelected: (String val) {
-            this.vehicleNumber.text = val;
-            print(val);
-          },
-          itemBuilder: (_, String item) {
-            return ListTile(
-              title: Text(item),
-            );
-          },
-          getImmediateSuggestions: true,
-          hideSuggestionsOnKeyboardHide: true,
-          hideOnEmpty: false,
-          validator: (value) {
-            if (value!.isEmpty) {
-              return 'Select Vehicle Number';
-            }
-            return null;
-          }),
     );
   }
 }
